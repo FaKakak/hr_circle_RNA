@@ -22,4 +22,10 @@ public class c2_frag {
         next.prior = newFrag;
         next = newFrag;
     }
+    public void removeThis(){
+        next.prior = prior;
+        prior.next = next;
+        next = this;
+        prior = this;
+    }
 }

@@ -5,17 +5,17 @@ public class Environment {
     public static final int TOTAL_MATERIAL = 80000;
     public static final int CELLNUM = SIDE*SIDE;
     int[][] raw_arr;
-    RNA[][][] cell_head;
+    RNA[][][] room_head;
 
     public Environment() {
         raw_arr = new int[SIDE][SIDE]; // every cell represents the quantity of raw material
-        cell_head = new RNA[2][SIDE][SIDE]; // every cell represents a RNA linkedlist
+        room_head = new RNA[2][SIDE][SIDE]; // every cell represents a RNA linkedlist
 
         // initialize the head of every RNA linkedlist
         for (int i = 0; i < 2; i++) {
             for(int j=0;j<SIDE;j++){
                 for(int k=0;k<SIDE;k++){
-                    cell_head[i][j][k] = new RNA();
+                    room_head[i][j][k] = new RNA();
                 }
             }
         }
