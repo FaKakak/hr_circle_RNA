@@ -3,10 +3,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 public class Main {
-    public static final int STEPNUM = 150000;
+    public static final int STEPNUM = 1500000;
     public static final int INOCUSTEP = 10000;
     public static final int STAREC = 0;
-    public static final int RECINT = 5000;
+    public static final int RECINT = 10000;
+    public static final int SEED = 10;
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
@@ -19,7 +20,7 @@ public class Main {
         Record_generator recordGenerator = new Record_generator(e);
         Inoculate_generator inoculateGenerator = new Inoculate_generator(e);
         for (int i = 0; i <= STEPNUM; i++) {
-            if(i==INOCUSTEP) inoculateGenerator.inoculate(h);
+            if(i==INOCUSTEP) inoculateGenerator.inoculate(h,0);
             if(i>=STAREC&&i%RECINT==0){
                 recordGenerator.record(h,i);
             }
@@ -28,7 +29,7 @@ public class Main {
         }
         long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
-        try (PrintWriter writer = new PrintWriter(new FileWriter("pictureJava.txt", true))) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("picture.txt", true))) {
             writer.printf("程序运行时间："+duration*0.001+" s\n");
         } catch (IOException E) {
             System.out.println("cannot open file");

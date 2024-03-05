@@ -12,20 +12,20 @@ public class Inoculate_generator {
         this.cell_head = environment.cell_head;
     }
 
-    public void inoculate(int h){
+    public void inoculate(int h,int type){
         for (int i = 0; i < INOCUNUM; i++) {
-            inoculate_helper(h,RNA.INOCUSEQ);
-            inoculate_helper(h,RNA.INOCUSEQ1);
-            inoculate_helper(h,RNA.INOCUSEQ2);
-            inoculate_helper(h,RNA.INOCUSEQ3);
+            inoculate_helper(h,RNA.INOCUSEQ,type);
+            inoculate_helper(h,RNA.INOCUSEQ1,type);
+            inoculate_helper(h,RNA.INOCUSEQ2,type);
+            inoculate_helper(h,RNA.INOCUSEQ3,type);
         }
     }
 
-    private void inoculate_helper(int h,char[] seq){
-        Random random = new Random();
+    private void inoculate_helper(int h,char[] seq,int type){
+        Random random = new Random(Main.SEED);
         int x = random.nextInt(Environment.SIDE);
         int y = random.nextInt(Environment.SIDE);
-        RNA newRNA = new RNA(seq);
+        RNA newRNA = new RNA(seq,type);
         cell_head[h][y][x].addAfter(newRNA);
     }
 }

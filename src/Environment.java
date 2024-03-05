@@ -1,8 +1,8 @@
 import java.util.Random;
 
 public class Environment {
-    public static final int SIDE = 20;
-    public static final int TOTAL_MATERIAL = 40000;
+    public static final int SIDE = 30;
+    public static final int TOTAL_MATERIAL = 80000;
     public static final int CELLNUM = SIDE*SIDE;
     int[][] raw_arr;
     RNA[][][] cell_head;
@@ -21,7 +21,7 @@ public class Environment {
         }
 
         // initialize the raw_arr
-        Random random = new Random();
+        Random random = new Random(Main.SEED);
         for(int i=0;i<TOTAL_MATERIAL;i++){
             int x = random.nextInt(SIDE);
             int y = random.nextInt(SIDE);

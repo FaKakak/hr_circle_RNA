@@ -1,34 +1,41 @@
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import static java.lang.Math.pow;
 
 public class Unit_case_generator {
-    public static final double PSBP = 0.9;
-    public static final double PBB = 0.000001;
-    public static final double PLMC = 0.000002;
-    public static final double PAT = 0.1;
-    public static final double PLT = 0.9;
-    public static final double PMOVR = 0.01;
-    public static final double PMOV = (PMOVR/2);
-    public static final double PMF = 0.0002;
-    public static final int TNSS = 1;
-    public static final double PMD = 0.01;
-    public static final double PFP = 0.01;
+    public static final double PSBP = 0.5;
+    public static final double PBB = 0.00001;
+    public static final double PLMC = 0.0000001;
+    public static final double PEL = 0.0000001;
+    public static final int MINI_CIRCLE_LENGTH = 8;
+    public static final int FDA = 5;
+    public static final int FHR = 1;
+    public static final double FLT = 0.5;
+    public static final double PAT = 0.5;
+    public static final double PLT = 0.2;
+    public static final double PMR = 0.01;
+    public static final double PMV = 0.002;
+    public static final double PMF = 0.001;
     public static final double PMFS = 0.9;
-    public double FDMOV(RNA p) {
-        return pow(p.length1 + p.length2, 1 / 3.0);
+    public static final int TNSS = 1;
+    public static final double PMD = 0.05;
+    public static final double PNDE = 0.001;
+    public static final double PFP = 0.01;
+    public double RMRW(RNA p) {
+        return pow(p.length1 + p.length2, 1 / 2.0);
     }
 
     Environment environment;
-    int SIDE;
+    int N;
     int[][] raw_arr;
     RNA[][][] cell_head;
-    Random random = new Random();
+    Random random = new Random(Main.SEED);
     int h;
     public Unit_case_generator(Environment environment) {
         this.environment = environment;
-        SIDE = Environment.SIDE;
+        N = Environment.SIDE;
         raw_arr=environment.raw_arr;
         cell_head=environment.cell_head;
     }
@@ -47,8 +54,8 @@ public class Unit_case_generator {
             xyIndex = random.nextInt(xy_init.size());
             xy = xy_init.get(xyIndex);
             xy_init.remove(xyIndex);
-            x = xy%SIDE;
-            y = xy/SIDE;
+            x = xy%N;
+            y = xy/N;
 
             raw(y, x);
 
@@ -83,107 +90,98 @@ public class Unit_case_generator {
         }
     }
     private RNA fresh_unit(RNA p, int y, int x){
-        // 好像成了
-        // 它的功能就是，把当前RNA剥离这一层，搬到下一层，返回值为它的前一个RNA
+        // 把当前RNA剥离这一层，搬到下一层，返回值为它的前一个RNA
         // 游离的RNA单独处理
         RNA p1 = p.prior;
         p.removeThis();
         cell_head[h^1][y][x].addAfter(p);
         return p1;
     }
-    private boolean findSeq(char[] subseq,RNA rna){
-        boolean hasSeq = false;
-        if(rna.length1>= subseq.length){
-            for (int i = 0; rna.length1- subseq.length>=i; i++) {
-                int j;
-                for (j = 0; j < subseq.length; j++) {
-                    if(rna.information[0][i+j]!=subseq[j]) break;
+    private int findSeq(char[] seq,RNA p){
+        int seqlength = seq.length;
+        int length = RNA.MAX_RNA_LENGTH + RNA.MAX_CHAR_LENGTH;
+        char[] inf = new char[length];    //RRRRR-ma3,  #define MAX_CHAR_LENGTH 20, --- to avoid using array out of bounds in the "dangerous block"
+        //RRRRR-ma3,
+        Arrays.fill(inf, '0');
+
+        for (int a = 0; a < p.length1 + seqlength; a++)  // dangerous block
+        {
+            if (a < p.length1) inf[a] = p.information[0][a];
+            else inf[a] = p.information[0][a - p.length1];
+        }
+
+        int flag2 = 0;
+        // search for the subsequence
+        if (p.length1 >= seqlength)
+        {
+            if (p.type1 == 0)
+            {
+                for (int b = 0; p.length1 - seqlength - b >= 0; b++)
+                {
+                    flag2 = 0;
+                    for (int a = 0; a < seqlength; a++)
+                    {
+                        if (inf[b + a] == seq[a])continue;
+                        else { flag2 = 1; break; }  //this location has not this subsequence
+                    }
+                    if (flag2 == 0)break; // this location has this subsequence
                 }
-                if(j == subseq.length){
-                    hasSeq = true;
-                    break;
+            }
+            else if (p.type1 == 1)
+            {
+
+                for (int b = 0; b <= p.length1 - 1; b++)
+                {
+                    flag2 = 0;
+                    for (int a = 0; a < seqlength; a++)
+                    {
+                        if (inf[b + a] == seq[a])continue;
+                        else { flag2 = 1; break; }
+                    }
+                    if (flag2 == 0)break;
                 }
             }
         }
-        return hasSeq;
+        else flag2 = 1;
+
+        if (flag2 == 0)return(0);   //Yes, the sequence contains the subsequence
+        else return(1);   //no, the sequence does not contain the subsequence
     }
     private void raw(int y, int x){
-        int raw_bef = raw_arr[y][x];
-        for(int i=0;i<raw_bef;i++){
-            switch (random.nextInt(2)){
-                case 0: // 原材料变成核苷酸
-                    if(random.nextDouble()<PMF){
+        int raw_bef = raw_arr[y][x];     //Events of raw materials
+        for (int k = 0; k < raw_bef; k++)
+        {
+            int randcaser = random.nextInt(2);
+            switch (randcaser) {
+                case 0 -> {  //forming nt
+                    if (random.nextDouble() < PMF) {
                         raw_arr[y][x]--;
-                        RNA newRNA = new RNA();
-                        switch (random.nextInt(4)+1){
-                            case 1:
-                                newRNA.information[0][0]='A';
-                                break;
-                            case 2:
-                                newRNA.information[0][0]='C';
-                                break;
-                            case 3:
-                                newRNA.information[0][0]='G';
-                                break;
-                            case 4:
-                                newRNA.information[0][0]='U';
-                                break;
+                        RNA p3 = new RNA();
+                        int randnt = random.nextInt(4) + 1;
+                        switch (randnt) {
+                            case 1 -> p3.information[0][0] = 'A';
+                            case 2 -> p3.information[0][0] = 'C';
+                            case 3 -> p3.information[0][0] = 'G';
+                            case 4 -> p3.information[0][0] = 'U';
                         }
-                        newRNA.information[0][1]='0';
-                        newRNA.information[1][0]='0';
-                        newRNA.length1=1;
-                        newRNA.length2=0;
-                        newRNA.nick=0;
-                        cell_head[h^1][y][x].addAfter(newRNA);
-                    }
-                    break;
-                case 1: // 原材料游走
-                    if(random.nextDouble()<PMOVR)
-                    {
-                    int direction = random.nextInt(4);   // Four possible directions
-                    switch(direction)
-                    {
-                        case 0: // 左
-                            if(x>0) // 最左的原材料会碰壁
-                            {
-                                raw_arr[y][x]--;
-                                raw_arr[y][x-1]++;
-                            }
-                            break;
 
-                        case 1: // 右
-                            if(x<SIDE-1) // 最右的原材料会碰壁
-                            {
-                                raw_arr[y][x]--;
-                                raw_arr[y][x+1]++;
-                            }
-                            break;
-
-                        case 2: // 上
-                            if(y>0) //最上的原材料会碰壁
-                            {
-                                raw_arr[y][x]--;
-                                raw_arr[y-1][x]++;
-                            }
-                            break;
-
-                        case 3: // 下
-                            if(y<SIDE-1) // 最下的原材料会碰壁
-                            {
-                                raw_arr[y][x]--;
-                                raw_arr[y+1][x]++;
-                            }
-                            break;
-
-                        default:
-                            System.err.println("raw moving error");
-                            System.exit(1);
+                        p3.length1 = 1;
+                        fresh_unit(p3, y, x);
                     }
                 }
-                break;
-                default:
-                    System.err.println("raw case error");
-                    System.exit(1);
+                case 1 -> {   // raw moving
+                    if (random.nextDouble() < PMR)   //Ma2: with toroidal topology to avoid edge effects
+                    {
+                        raw_arr[y][x]--;   //Ma2
+                        int randcaser1 = random.nextInt(4);   // Four possible directions
+                        switch (randcaser1) {
+                            case 0 -> raw_arr[y][(N + x - 1) % N]++;  //Na2: toroidal topology
+                            case 1 -> raw_arr[y][(x + 1) % N]++;
+                            case 2 -> raw_arr[(N + y - 1) % N][x]++;
+                            case 3 -> raw_arr[(y + 1) % N][x]++;
+                        }
+                    }
+                }
             }
         }
     }
