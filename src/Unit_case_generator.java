@@ -40,7 +40,7 @@ public class Unit_case_generator {
         this.environment = environment;
         N = Environment.SIDE;
         raw_arr = environment.raw_arr;
-        cell_head = environment.cell_head;
+        cell_head = environment.room_head;
     }
 
     public void unit_case(int h) {
@@ -247,144 +247,127 @@ public class Unit_case_generator {
             //if (p.information[0][0] == 0) { printf("unexpected error on p-nucleotide"); exit(0); }
             if (p.length2 == 0)
             {
-                if (randd() < PMD)
+                if (random.nextDouble() < PMD)
                 {
                     raw_arr[y][x]++;
-                    (p.prior).next = p.next;
-                    if (p.next != room_head[h][y][x])(p.next).prior = p.prior;
-                    p3 = p;
-                    p = p.prior;
-                    free(p3.chain2);
-                    free(p3); break;
+                    RNA rP = p.prior;
+                    p.removeThis();
+                    return rP;
                 }
             }
             else if (p.length2 == 1)      //Ma2: The decay of the paired nucleotides at the same time
             {
-                if (randd() < PMD * sqrt(PMD))
+                if (random.nextDouble() < PMD * sqrt(PMD))
                 {
                     raw_arr[y][x] += 2;
-                    (p.prior).next = p.next;
-                    if (p.next != room_head[h][y][x])(p.next).prior = p.prior;
-                    p3 = p;
-                    p = p.prior;
-                    free(p3.chain2);
-                    free(p3); break;
+                    RNA rP = p.prior;
+                    p.removeThis();
+                    return rP;
                 }
             }
-            else { printf("unexpected error on chain-length"); exit(0); }
         }
         else                  //Degradation of chain
         {
             if (p.type1 == 0)
             {
-                c2f1 = p.chain2.prior;
+                c2_frag c2f1 = p.chain2.prior;
 
                 // Nucleotide residue decaying at the end of RNA
-                if (p.information[1][p.length1 - 1] == 0)         // Single chain at the end
+                if (p.information[1][p.length1 - 1] == '0')         // Single chain at the end
                 {
-                    if (randd() < PNDE)
+                    if (random.nextDouble() < PNDE)
                     {
-                        p.information[0][p.length1 - 1] = 0;
+                        p.information[0][p.length1 - 1] = '0';
                         p.length1--;
                         raw_arr[y][x]++;
                     }
                 }
-                else if (p.information[1][p.length1 - 1] != 0)  //Double chain at the end
+                else if (p.information[1][p.length1 - 1] != '0')  //Double chain at the end
                 {
-                    if (randd() < PNDE * sqrt(PNDE))                 // The decay of the paired residues at the same time
+                    if (random.nextDouble() < PNDE * sqrt(PNDE))                 // The decay of the paired residues at the same time
                     {
-                        p.information[0][p.length1 - 1] = 0;
-                        raw_arr[y][x]++;
-
-                        p.information[1][p.length1 - 1] = 0;
-                        raw_arr[y][x]++;
-
+                        p.information[0][p.length1 - 1] = '0';
+                        p.information[1][p.length1 - 1] = '0';
+                        raw_arr[y][x]+=2;
                         p.length1--;
                         p.length2--;
                         c2f1.length--;
 
                         if (c2f1.length == 0)
                         {
-                            (c2f1.prior).next = c2f1.next;
-                            (c2f1.next).prior = c2f1.prior;
-                            free(c2f1);
+                            c2f1.removeThis();
                         }
                     }
                 }
-                //else { printf("unexpected error on chain-length"); exit(0); }
 
                 if (p.length1 == 1)
                 {
-                    fresh_unit();
-                    break;
+                    return fresh_unit(p,y,x);
                 }
 
                 // Nucleotide residue decaying at the start of RNA
-                c2f2 = p.chain2.next;
-                if (p.information[1][0] == 0)      //Single chain at the start
+                c2_frag c2f2 = p.chain2.next;
+                if (p.information[1][0] == '0')      //Single chain at the start
                 {
-                    if (randd() < PNDE)             // The decay of the start residue on this single chain
+                    if (random.nextDouble() < PNDE)             // The decay of the start residue on this single chain
                     {
-                        for (b = 1; b < p.length1; b++)
+                        for (int b = 1; b < p.length1; b++)
                         {
                             p.information[0][b - 1] = p.information[0][b];
                             p.information[1][b - 1] = p.information[1][b];
                         }
-                        p.information[0][p.length1 - 1] = 0;
-                        p.information[1][p.length1 - 1] = 0;
+                        p.information[0][p.length1 - 1] = '0';
+                        p.information[1][p.length1 - 1] = '0';
                         p.length1--;
                         raw_arr[y][x]++;
 
-                        for (c2f3 = c2f2; c2f3 != p.chain2; c2f3 = c2f3.next)    //Ma2
+                        for (c2_frag c2f3 = c2f2; c2f3 != p.chain2; c2f3 = c2f3.next)    //Ma2
                         {
                             c2f3.start--;
                         }
                     }
                 }
-                else if (p.information[1][0] != 0) //Double chain at the start
+                else if (p.information[1][0] != '0') //Double chain at the start
                 {
-                    if (randd() < PNDE * sqrt(PNDE)) { // The decay of the paired residues at the same time
+                    if (random.nextDouble() < PNDE * sqrt(PNDE)) { // The decay of the paired residues at the same time
 
-                        for (b = 1; b < p.length1; b++)
+                        for (int b = 1; b < p.length1; b++)
                         {
                             p.information[0][b - 1] = p.information[0][b];
                             p.information[1][b - 1] = p.information[1][b];
                         }
-                        p.information[0][p.length1 - 1] = 0;
-                        p.information[1][p.length1 - 1] = 0;
-                        raw_arr[y][x]++;
-                        raw_arr[y][x]++;
+                        p.information[0][p.length1 - 1] = '0';
+                        p.information[1][p.length1 - 1] = '0';
+                        raw_arr[y][x]+=2;
 
                         p.length1--;
                         p.length2--;
                         c2f2.length--;
 
-                        for (c2f3 = c2f2.next; c2f3 != p.chain2; c2f3 = c2f3.next)
+                        for (c2_frag c2f3 = c2f2.next; c2f3 != p.chain2; c2f3 = c2f3.next)
                         {
                             c2f3.start--;
                         }
 
                         if (c2f2.length == 0)
                         {
-                            (c2f2.prior).next = c2f2.next;
-                            (c2f2.next).prior = c2f2.prior;
-                            free(c2f2);
+                            c2f2.removeThis();
                         }
                     }
                 }
-                //else { printf("unexpected error on chain-length"); exit(0); }
 
                 if (p.length1 == 1)
                 {
-                    fresh_unit();
-                    break;
+                    return fresh_unit(p,y,x);
                 }
 
-                while (1)
+                while (true)
                 {
+                    int j;
+                    int hrlength = RNA.HRSEQ.length;
                     for (j = p.length1; j > 1; j--)
                     {
-                        f = PBB;
+                        double f = PBB;
                         for (c2f1 = p.chain2.prior; c2f1 != p.chain2; c2f1 = c2f1.prior)
                         {
                             if (j > c2f1.start + 1)
@@ -397,60 +380,41 @@ public class Unit_case_generator {
                             }
                         }
 
+                        int flag = 1;
                         if (j - 1 >= hrlength / 2 && p.length1 - j + 1 >= hrlength / 2)       //new
                         {
                             flag = 0;
-                            for (a = 0; a < hrlength; a++)
+                            for (int a = 0; a < hrlength; a++)
                             {
-                                if (p.information[0][j - 1 - hrlength / 2 + a] == hrseq[a] && p.information[1][j - 1 - hrlength / 2 + a] == 0)continue;
+                                if (p.information[0][j - 1 - hrlength / 2 + a] == RNA.HRSEQ[a] && p.information[1][j - 1 - hrlength / 2 + a] == '0')continue;
                                 else { flag = 1; break; }
                             }
                         }
-                        else flag = 1;
                         if (flag == 0)f = f * FHR;   //Ma2
 
                         c2f1 = p.chain2.prior;
                         c2f2 = p.chain2.next;
-                        if (randd() < f)
+                        if (random.nextDouble() < f)
                         {
-                            p3 = (struct rna*)malloc(LEN);
-                            if (!p3) { printf("\t%ddeg--memeout\n", i); exit(0); }
-                            memset(p3.information, 0, sizeof(p3.information));
-                            c2f = (struct c2_frag*)malloc(sizeof(struct c2_frag));
-                            if (!c2f) { printf("\tinit1--memeout\n"); exit(0); }
-                            p3.chain2 = c2f;
-                            c2f.next = p3.chain2;
-                            c2f.prior = p3.chain2;
-
-                            for (b = 0; b < p.length1 - j + 1; b++)
+                            RNA p3 = new RNA();
+                            for (int b = 0; b < p.length1 - j + 1; b++)
                             {
                                 p3.information[0][b] = p.information[0][b + j - 1];
-                                p.information[0][b + j - 1] = 0;
+                                p.information[0][b + j - 1] = '0';
                             }
                             p3.length1 = p.length1 - j + 1;
                             p.length1 = j - 1;
-                            p3.length2 = 0;
-                            p3.type1 = 0;
-                            p3.type2 = 0;  //Ma2
-
-                            //if (p.length2 == 0 || c2f1.start + c2f1.length <= j - 1)    //Ma2
-                            //{
-                            //	p3.information[1][0] = 0;
-                            //}
                             if (c2f1 != p.chain2 && c2f1.start + c2f1.length > j - 1)   //Ma2
                             {
-                                //p3.type2 = 0;  //Ma2
-
-                                for (b = 0; b < c2f1.start + c2f1.length - j + 1; b++)
+                                for (int b = 0; b < c2f1.start + c2f1.length - j + 1; b++)
                                 {
                                     p3.information[1][b] = p.information[1][b + j - 1];
-                                    p.information[1][b + j - 1] = 0;
+                                    p.information[1][b + j - 1] = '0';
                                 }
 
                                 while (c2f1 != p.chain2)
                                 {
-                                    c2f3 = (struct c2_frag*)malloc(sizeof(struct c2_frag));
-                                    if (!c2f3) { printf("\tinit1--memeout\n"); exit(0); }
+                                    c2_frag c2f3 = new c2_frag();
                                     c2f3.prior = p3.chain2;
                                     c2f3.next = p3.chain2.next;
                                     p3.chain2.next.prior = c2f3;
@@ -465,12 +429,7 @@ public class Unit_case_generator {
 
                                         (c2f1.prior).next = c2f1.next;
                                         (c2f1.next).prior = c2f1.prior;
-                                        c2f = c2f1;
                                         c2f1 = c2f1.prior;
-                                        free(c2f);
-
-                                        if (p3.length1 < p3.length2) { printf("unexpected error on p3-chain-length"); exit(0); }
-                                        if (c2f3.start + c2f3.length > p3.length1) { printf("unexpected error on p3-chain-length"); exit(0); }
 
                                         if (j >= c2f1.start + c2f1.length + 1)
                                         {
@@ -485,18 +444,11 @@ public class Unit_case_generator {
 
                                         p3.length2 = p3.length2 + c2f3.length;
                                         p.length2 = p.length2 - c2f3.length;
-
-                                        if (p.length1 < p.length2) { printf("unexpected error on p-chain-length"); exit(0); }
-                                        if (p3.length1 < p3.length2) { printf("unexpected error on p3-chain-length"); exit(0); }
-                                        if (c2f3.start + c2f3.length > p3.length1) { printf("unexpected error on p-chain-length"); exit(0); }
                                         break;
                                     }
                                 }
                             }
-                            p3.prior = room_head[!h][y][x];
-                            p3.next = room_head[!h][y][x].next;
-                            if (p3.next != room_head[!h][y][x])(p3.next).prior = p3;
-                            room_head[!h][y][x].next = p3;
+                            fresh_unit(p3,y,x);
                             break;     //Bond break occurs
                         }
                     }
@@ -505,10 +457,13 @@ public class Unit_case_generator {
             }
             else if (p.type1 == 1)
             {
-                flag5 = 0;  //Ma2: a flag labeling whether the circle chain breaking has happened
-                for (j = p.length1; j > 0; j--)
+                int flag5 = 0;  //Ma2: a flag labeling whether the circle chain breaking has happened
+                for (int j = p.length1; j > 0; j--)
                 {
-                    f = PBB; flag1 = 0; //Ma2
+                    double f = PBB;
+                    int flag1 = 0; //Ma2
+                    int hrlength = RNA.HRSEQ.length;
+                    c2_frag c2f1;
                     for (c2f1 = p.chain2.prior; c2f1 != p.chain2; c2f1 = c2f1.prior)
                     {
                         if (j > c2f1.start + 1)
@@ -519,43 +474,44 @@ public class Unit_case_generator {
                             }
                             break;
                         }
-                        //else if (c2f1 == p.chain2.next)break;  //Ma2
                     }
                     if (j == 1 && p.type2 == 1)f = f * sqrt(f);
 
+                    int flag,a;
                     for (flag = 0, a = 0; a < hrlength; a++)                    //new
                     {
                         if (j - 1 - hrlength / 2 + a >= p.length1)
                         {
-                            if (p.information[0][j - 1 - hrlength / 2 + a - p.length1] == hrseq[a] && p.information[1][j - 1 - hrlength / 2 + a - p.length1] == 0)continue;
+                            if (p.information[0][j - 1 - hrlength / 2 + a - p.length1] == RNA.HRSEQ[a] && p.information[1][j - 1 - hrlength / 2 + a - p.length1] == '0')continue;
                             else { flag = 1; break; }
                         }
                         else if (j - 1 - hrlength / 2 + a < 0)
                         {
-                            if (p.information[0][p.length1 + j - 1 - hrlength / 2 + a] == hrseq[a] && p.information[1][p.length1 + j - 1 - hrlength / 2 + a] == 0)continue;
+                            if (p.information[0][p.length1 + j - 1 - hrlength / 2 + a] == RNA.HRSEQ[a] && p.information[1][p.length1 + j - 1 - hrlength / 2 + a] == '0')continue;
                             else { flag = 1; break; }
                         }
                         else
                         {
-                            if (p.information[0][j - 1 - hrlength / 2 + a] == hrseq[a] && p.information[1][j - 1 - hrlength / 2 + a] == 0)continue;
+                            if (p.information[0][j - 1 - hrlength / 2 + a] == RNA.HRSEQ[a] && p.information[1][j - 1 - hrlength / 2 + a] == '0')continue;
                             else { flag = 1; break; }
                         }
                     }
                     if (flag == 0)f = f * FHR;   //Ma2
 
-                    if (randd() < f)
+                    if (random.nextDouble() < f)
                     {
                         flag5 = j;  // Ma2: the location of the circle chain breaking
                         p.type1 = 0;
                         p.type2 = 0;
                         if (j == 1)break;
 
-                        for (b = 0; b < j - 1; b++)
+                        char[][] temp_information = new char[2][RNA.MAX_RNA_LENGTH];
+                        for (int b = 0; b < j - 1; b++)
                         {
                             temp_information[0][b] = p.information[0][b];
                             temp_information[1][b] = p.information[1][b];
                         }
-                        for (b = 0; b < p.length1; b++)
+                        for (int b = 0; b < p.length1; b++)
                         {
                             if (b < p.length1 - j + 1)
                             {
@@ -570,10 +526,10 @@ public class Unit_case_generator {
                         }
                         if (p.chain2.next == p.chain2)break;  //Ma2
 
+                        c2_frag c2f3;
                         if (flag1 == 1) //f == PBB * sqrt(PBB)) //Ma2
                         {
-                            c2f3 = (struct c2_frag*)malloc(sizeof(struct c2_frag));
-                            if (!c2f3) { printf("\tinit1--memeout\n"); exit(0); }
+                            c2f3 = new c2_frag();
                             c2f3.prior = c2f1;
                             c2f3.next = c2f1.next;
                             c2f1.next.prior = c2f3;
@@ -590,8 +546,8 @@ public class Unit_case_generator {
 
                         //Ma2: two "if" sentences were deleted
 
-                        for (c2f2 = c2f3; c2f2 != p.chain2; c2f2 = c2f2.next) c2f2.start = c2f2.start - j + 1;
-                        for (c2f2 = p.chain2.next; c2f2 != c2f1.next; c2f2 = c2f2.next) c2f2.start = c2f2.start + p.length1 - j + 1;
+                        for (c2_frag c2f2 = c2f3; c2f2 != p.chain2; c2f2 = c2f2.next) c2f2.start = c2f2.start - j + 1;
+                        for (c2_frag c2f2 = p.chain2.next; c2f2 != c2f1.next; c2f2 = c2f2.next) c2f2.start = c2f2.start + p.length1 - j + 1;
 
                         //if (p.chain2.next.next == p.chain2)break;  //Ma2
 
@@ -605,20 +561,20 @@ public class Unit_case_generator {
                             c2f3.prior = p.chain2;
                         }
 
-                        if (p.length1 < p.length2) { printf("unexpected error on p-chain-length5"); exit(0); }
-                        //if (c2f1.start + c2f1.length > p.length1) { printf("unexpected error on p-chain-length6"); exit(0); }  //Ma2
                         break;
                     }
                 }
                 if (flag5 != 0) //Ma2--start: Circlar chain breaking has happened
                 {
-                    flag4 = p.length1 - flag5 + 1;
-                    while (1)
+                    int flag4 = p.length1 - flag5 + 1;
+                    int hrlength = RNA.HRSEQ.length;
+                    while (true)
                     {
+                        int j;
                         for (j = p.length1; j > flag4; j--)  //Ma2: Only consider those bonds that have not been considered before the circular chain breaking
                         {
-                            f = PBB;
-                            for (c2f1 = p.chain2.prior; c2f1 != p.chain2; c2f1 = c2f1.prior)
+                            double f = PBB;
+                            for (c2_frag c2f1 = p.chain2.prior; c2f1 != p.chain2; c2f1 = c2f1.prior)
                             {
                                 if (j > c2f1.start + 1)
                                 {
@@ -630,60 +586,42 @@ public class Unit_case_generator {
                                 }
                             }
 
+                            int flag = 1;
                             if (j - 1 >= hrlength / 2 && p.length1 - j + 1 >= hrlength / 2)       //new
                             {
                                 flag = 0;
-                                for (a = 0; a < hrlength; a++)
+                                for (int a = 0; a < hrlength; a++)
                                 {
-                                    if (p.information[0][j - 1 - hrlength / 2 + a] == hrseq[a] && p.information[1][j - 1 - hrlength / 2 + a] == 0)continue;
+                                    if (p.information[0][j - 1 - hrlength / 2 + a] == RNA.HRSEQ[a] && p.information[1][j - 1 - hrlength / 2 + a] == '0')continue;
                                     else { flag = 1; break; }
                                 }
                             }
-                            else flag = 1;
                             if (flag == 0)f = f * FHR;   //Ma2
 
-                            c2f1 = p.chain2.prior;
-                            c2f2 = p.chain2.next;
-                            if (randd() < f)
+                            c2_frag c2f1 = p.chain2.prior;
+                            c2_frag c2f2 = p.chain2.next;
+                            if (random.nextDouble() < f)
                             {
-                                p3 = (struct rna*)malloc(LEN);
-                                if (!p3) { printf("\t%ddeg--memeout\n", i); exit(0); }
-                                memset(p3.information, 0, sizeof(p3.information));
-                                c2f = (struct c2_frag*)malloc(sizeof(struct c2_frag));
-                                if (!c2f) { printf("\tinit1--memeout\n"); exit(0); }
-                                p3.chain2 = c2f;
-                                c2f.next = p3.chain2;
-                                c2f.prior = p3.chain2;
+                                RNA p3 = new RNA();
 
-                                for (b = 0; b < p.length1 - j + 1; b++)
+                                for (int b = 0; b < p.length1 - j + 1; b++)
                                 {
                                     p3.information[0][b] = p.information[0][b + j - 1];
-                                    p.information[0][b + j - 1] = 0;
+                                    p.information[0][b + j - 1] = '0';
                                 }
                                 p3.length1 = p.length1 - j + 1;
                                 p.length1 = j - 1;
-                                p3.length2 = 0;
-                                p3.type1 = 0;
-                                p3.type2 = 0;  //Ma2
-
-                                //if (p.length2 == 0 || c2f1.start + c2f1.length <= j - 1)    //Ma2
-                                //{
-                                //	p3.information[1][0] = 0;
-                                //}
                                 if (c2f1 != p.chain2 && c2f1.start + c2f1.length > j - 1)   //Ma2
                                 {
-                                    //p3.type2 = 0;  //Ma2
-
-                                    for (b = 0; b < c2f1.start + c2f1.length - j + 1; b++)
+                                    for (int b = 0; b < c2f1.start + c2f1.length - j + 1; b++)
                                     {
                                         p3.information[1][b] = p.information[1][b + j - 1];
-                                        p.information[1][b + j - 1] = 0;
+                                        p.information[1][b + j - 1] = '0';
                                     }
 
                                     while (c2f1 != p.chain2)
                                     {
-                                        c2f3 = (struct c2_frag*)malloc(sizeof(struct c2_frag));
-                                        if (!c2f3) { printf("\tinit1--memeout\n"); exit(0); }
+                                        c2_frag c2f3 = new c2_frag();
                                         c2f3.prior = p3.chain2;
                                         c2f3.next = p3.chain2.next;
                                         p3.chain2.next.prior = c2f3;
@@ -698,13 +636,7 @@ public class Unit_case_generator {
 
                                             (c2f1.prior).next = c2f1.next;
                                             (c2f1.next).prior = c2f1.prior;
-                                            c2f = c2f1;
                                             c2f1 = c2f1.prior;
-                                            free(c2f);
-
-                                            if (p3.length1 < p3.length2) { printf("unexpected error on p3-chain-length"); exit(0); }
-                                            if (c2f3.start + c2f3.length > p3.length1) { printf("unexpected error on p3-chain-length"); exit(0); }
-
                                             if (j >= c2f1.start + c2f1.length + 1)
                                             {
                                                 break;
@@ -715,21 +647,13 @@ public class Unit_case_generator {
                                             c2f3.length = c2f1.start + c2f1.length - j + 1;
                                             c2f3.start = 0;
                                             c2f1.length = c2f1.length - c2f3.length;
-
                                             p3.length2 = p3.length2 + c2f3.length;
                                             p.length2 = p.length2 - c2f3.length;
-
-                                            if (p.length1 < p.length2) { printf("unexpected error on p-chain-length"); exit(0); }
-                                            if (p3.length1 < p3.length2) { printf("unexpected error on p3-chain-length"); exit(0); }
-                                            if (c2f3.start + c2f3.length > p3.length1) { printf("unexpected error on p-chain-length"); exit(0); }
                                             break;
                                         }
                                     }
                                 }
-                                p3.prior = room_head[!h][y][x];
-                                p3.next = room_head[!h][y][x].next;
-                                if (p3.next != room_head[!h][y][x])(p3.next).prior = p3;
-                                room_head[!h][y][x].next = p3;
+                                fresh_unit(p3,y,x);
                                 break;    //Bond break occurs
                             }
                         }
@@ -742,19 +666,16 @@ public class Unit_case_generator {
     }
 
     private RNA case2(RNA p, int y, int x) {
-        for (c2f2 = p.chain2.next; c2f2 != p.chain2; c2f2 = c2f2.next)         //Template-directed ligation
+        for (c2_frag c2f2 = p.chain2.next; c2f2 != p.chain2; c2f2 = c2f2.next)         //Template-directed ligation
         {
-            rtdaddlig = randd();
-            c2f3 = c2f2.next;
+            double rtdaddlig = random.nextDouble();
+            c2_frag c2f3 = c2f2.next;
             if (c2f3 != p.chain2)
             {
                 if (c2f2.length + c2f2.start == c2f3.start && rtdaddlig < PLT)
                 {
-                    //if (p.information[1][c2f3.start] == 0 || p.information[1][c2f3.start - 1] == 0) { printf("unexpected error on add-nucleotide"); exit(0); }
                     c2f2.length = c2f2.length + c2f3.length;
-                    c2f2.next = c2f3.next;
-                    (c2f3.next).prior = c2f2;
-                    free(c2f3);
+                    c2f3.removeThis();
                     break;
                 }
             }
@@ -763,20 +684,21 @@ public class Unit_case_generator {
                 if (p.type1 == 1 && c2f2.length + c2f2.start == p.length1 && p.chain2.next.start == 0 && rtdaddlig < PLT)
                 {
                     //if (p.information[1][0] == 0 && p.information[1][p.length1 - 1] == 0) { printf("unexpected error on add-nucleotide2"); exit(0); }
-                    c2f1 = p.chain2.prior;
-                    c2f4 = p.chain2.next;   //Ma2
+                    c2_frag c2f1 = p.chain2.prior;
+                    c2_frag c2f4 = p.chain2.next;   //Ma2
                     if (c2f1 == c2f4)
                     {
                         p.type2 = 1;
                         break;
                     }
 
-                    for (b = 0; b < c2f1.length; b++)
+                    char[][] temp_information = new char[2][RNA.MAX_RNA_LENGTH];
+                    for (int b = 0; b < c2f1.length; b++)
                     {
                         temp_information[0][b] = p.information[0][b + p.length1 - c2f1.length];
                         temp_information[1][b] = p.information[1][b + p.length1 - c2f1.length];
                     }
-                    for (b = p.length1 - 1; b >= 0; b--)
+                    for (int b = p.length1 - 1; b >= 0; b--)
                     {
                         if (b >= c2f1.length)
                         {
@@ -797,7 +719,6 @@ public class Unit_case_generator {
                     }
                     c2f1.prior.next = p.chain2;
                     p.chain2.prior = c2f1.prior;
-                    free(c2f1);
                     break;
                 }
             }
@@ -805,20 +726,22 @@ public class Unit_case_generator {
 
 //if (p.type1 == 0) { fresh_unit(); break; }  //Ma2-1  Linear RNA cannot attract substrates
 //Template-directed attraction of substrates
+        double f1;
         if (p.type1 == 1) f1=PAT;  //Ma2-1
         else f1 = PAT * FLT;   //Ma2-1
-        for (p3 = p.next; p3 != p; p3 = p3.next)
+        for (RNA p3 = p.next; p3 != p; p3 = p3.next)
         {
-            if (p3 == room_head[h][y][x])
+            if (p3 == environment.room_head[h][y][x])
             {
-                p3 = room_head[h][y][x].next;
+                p3 = environment.room_head[h][y][x].next;
                 if (p3 == p)break;
             }
             if (p3.length2 == 0 && p3.length1 <= p.length1)
             {
-                c2f2 = p.chain2.next;
+                c2_frag c2f2 = p.chain2.next;
                 if (p.type1 == 0 && (p.length2 == 0 || c2f2.start != 0))
                 {
+                    int length=0;
                     if (p.length2 == 0)
                     {
                         length = p.length1;
@@ -830,29 +753,29 @@ public class Unit_case_generator {
 
                     if (p3.length1 <= length)
                     {
+                        int flag=1,c;
                         for (c = 0; c <= length - p3.length1; c++)
                         {
+                            int b;
                             for (flag = 0, b = 0; b < p3.length1; b++)
                             {
-                                if ((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + b]) == 5)continue;
-                                else if (randd() < PFP)continue;
+                                if (((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + b]) == 'A'+'U')||((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + b]) == 'G'+'C'))continue;
+                                else if (random.nextDouble() < PFP)continue;
                                 else { flag = 1; break; }
                             }
                             if (flag == 0)break;
                         }
                         if (flag == 0)
                         {
-                            rtdaddphili = randd() * FDA;  //Ma2
+                            double rtdaddphili = random.nextDouble() * FDA;  //Ma2
                             if (rtdaddphili < f1)
                             {
-                                for (a = 0; a < p3.length1; a++)
+                                for (int a = 0; a < p3.length1; a++)
                                 {
                                     p.information[1][c + a] = p3.information[0][p3.length1 - 1 - a];
-                                    if (p.information[1][c + a] == 0) { printf("unexpected error on add-nucleotide3"); exit(0); };
                                 }
 
-                                c2f3 = (struct c2_frag*)malloc(sizeof(struct c2_frag));
-                                if (!c2f3) { printf("\tinit1--memeout\n"); exit(0); }
+                                c2_frag c2f3 = new c2_frag();
                                 c2f3.prior = p.chain2;
                                 c2f3.next = p.chain2.next;
                                 p.chain2.next.prior = c2f3;
@@ -862,12 +785,7 @@ public class Unit_case_generator {
                                 c2f3.length = p3.length1;
 
                                 p.length2 = p.length2 + p3.length1;
-                                //p.type2 = 0;    //Ma2
-
-                                (p3.prior).next = p3.next;
-                                if (p3.next != room_head[h][y][x])(p3.next).prior = p3.prior;
-                                free(p3.chain2);
-                                free(p3);
+                                p3.removeThis();
                                 break;
                             }
                         }
@@ -877,20 +795,23 @@ public class Unit_case_generator {
                 {
                     if (p.length1 >= p3.length1)
                     {
+                        int flag=1;
+                        int c;
                         for (c = 0; c <= p.length1 - 1; c++)
                         {
+                            int b;
                             for (flag = 0, b = 0; b < p3.length1; b++)
                             {
                                 if (c + b < p.length1)
                                 {
-                                    if ((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + b]) == 5)continue;
-                                    else if (randd() < PFP)continue;
+                                    if (((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + b]) == 'A'+'U')||((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + b]) == 'G'+'C'))continue;
+                                    else if (random.nextDouble() < PFP)continue;
                                     else { flag = 1; break; }
                                 }
                                 else
                                 {
-                                    if ((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + b - p.length1]) == 5)continue;
-                                    else if (randd() < PFP)continue;
+                                    if (((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + b - p.length1]) == 'A'+'U')||((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + b - p.length1]) == 'C'+'G'))continue;
+                                    else if (random.nextDouble() < PFP)continue;
                                     else { flag = 1; break; }
                                 }
                             }
@@ -898,11 +819,11 @@ public class Unit_case_generator {
                         }
                         if (flag == 0)
                         {
-                            rtdaddphili = randd() * FDA;   //Ma2
+                            char[][] temp_information = new char[2][RNA.MAX_RNA_LENGTH];
+                            double rtdaddphili = random.nextDouble() * FDA;   //Ma2
                             if (rtdaddphili < f1)
                             {
-                                c2f3 = (struct c2_frag*)malloc(sizeof(struct c2_frag));
-                                if (!c2f3) { printf("\tinit1--memeout\n"); exit(0); }
+                                c2_frag c2f3 = new c2_frag();
                                 c2f3.prior = p.chain2;
                                 c2f3.next = p.chain2.next;
                                 p.chain2.next.prior = c2f3;
@@ -911,40 +832,32 @@ public class Unit_case_generator {
 
                                 if (p3.length1 + c <= p.length1)
                                 {
-                                    for (a = 0; a < p3.length1; a++) {
+                                    for (int a = 0; a < p3.length1; a++) {
                                         p.information[1][c + a] = p3.information[0][p3.length1 - 1 - a];
-                                        if (p.information[1][c + a] == 0) { printf("unexpected error on add-nucleotide41"); exit(0); };
                                     }
 
                                     c2f3.start = c;
                                 }
                                 else
                                 {
-                                    for (b = 0; b < p.length1 - c; b++)
-                                        temp_information[0][b] = p.information[0][b + c];
+                                    if (p.length1 - c >= 0)
+                                        System.arraycopy(p.information[0], c, temp_information[0], 0, p.length1 - c);
 
-                                    for (b = p.length1 - 1; b >= 0; b--)
+                                    for (int b = p.length1 - 1; b >= 0; b--)
                                     {
                                         if (b >= p.length1 - c) {
                                             p.information[0][b] = p.information[0][b - p.length1 + c];
-                                            if (p.information[0][b] == 0) { printf("unexpected error on add-nucleotide42"); exit(0); };
                                         }
                                         else {
                                             p.information[0][b] = temp_information[0][b];
-                                            if (p.information[0][b] == 0) { printf("unexpected error on add-nucleotide43"); exit(0); };
                                         }
                                     }
-                                    for (a = 0; a < p3.length1; a++) { p.information[1][a] = p3.information[0][p3.length1 - 1 - a]; }
+                                    for (int a = 0; a < p3.length1; a++) { p.information[1][a] = p3.information[0][p3.length1 - 1 - a]; }
 
                                     c2f3.start = 0;
                                 }
                                 p.length2 = p.length2 + p3.length1;
-                                //p.type2 = 0;
-
-                                (p3.prior).next = p3.next;
-                                if (p3.next != room_head[h][y][x])(p3.next).prior = p3.prior;
-                                free(p3.chain2);
-                                free(p3);
+                                p3.removeThis();
                                 break;
                             }
                         }
@@ -952,25 +865,28 @@ public class Unit_case_generator {
                 }
                 else if (p.type1 == 1 && c2f2.start != 0)
                 {
-                    c2f1 = p.chain2.prior;
-                    length = c2f2.start + p.length1 - c2f1.start - c2f1.length;
+                    c2_frag c2f1 = p.chain2.prior;
+                    int length = c2f2.start + p.length1 - c2f1.start - c2f1.length;
 
                     if (length >= p3.length1)
                     {
+                        int flag = 1;
+                        int c;
                         for (c = 0; c <= length - p3.length1; c++)
                         {
+                            int b;
                             for (flag = 0, b = 0; b < p3.length1; b++)
                             {
                                 if (c + c2f1.start + c2f1.length + b < p.length1)   //Ma2
                                 {
-                                    if ((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + c2f1.start + c2f1.length + b]) == 5)continue;  //Ma2
-                                    else if (randd() < PFP)continue;
+                                    if (((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + c2f1.start + c2f1.length + b]) == 'A'+'U')||((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + c2f1.start + c2f1.length + b]) == 'G'+'C'))continue;  //Ma2
+                                    else if (random.nextDouble() < PFP)continue;
                                     else { flag = 1; break; }
                                 }
                                 else
                                 {
-                                    if ((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + c2f1.start + c2f1.length + b - p.length1]) == 5)continue;  //Ma2
-                                    else if (randd() < PFP)continue;
+                                    if (((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + c2f1.start + c2f1.length + b - p.length1]) == 'A'+'U')||((p3.information[0][p3.length1 - 1 - b] + p.information[0][c + c2f1.start + c2f1.length + b - p.length1]) == 'G'+'C'))continue;  //Ma2
+                                    else if (random.nextDouble() < PFP)continue;
                                     else { flag = 1; break; }
                                 }
                             }
@@ -978,17 +894,16 @@ public class Unit_case_generator {
                         }
                         if (flag == 0)
                         {
-                            rtdaddphili = randd();
+                            double rtdaddphili = random.nextDouble();
                             if (c != 0)rtdaddphili = rtdaddphili * FDA;  //Ma2
                             if (rtdaddphili < f1)
                             {
-                                c2f3 = (struct c2_frag*)malloc(sizeof(struct c2_frag));
-                                if (!c2f3) { printf("\tinit1--memeout\n"); exit(0); }
+                                c2_frag c2f3 = new c2_frag();
                                 c2f3.length = p3.length1;
 
                                 if (p3.length1 + c <= p.length1 - c2f1.start - c2f1.length)
                                 {
-                                    for (a = 0; a < p3.length1; a++)
+                                    for (int a = 0; a < p3.length1; a++)
                                         p.information[1][c2f1.start + c2f1.length + c + a] = p3.information[0][p3.length1 - 1 - a];
 
                                     c2f3.next = p.chain2;
@@ -999,7 +914,7 @@ public class Unit_case_generator {
                                 }
                                 else if (c >= p.length1 - c2f1.start - c2f1.length)
                                 {
-                                    for (a = 0; a < p3.length1; a++)
+                                    for (int a = 0; a < p3.length1; a++)
                                         p.information[1][c - p.length1 + c2f1.start + c2f1.length + a] = p3.information[0][p3.length1 - 1 - a];
 
                                     c2f3.prior = p.chain2;
@@ -1010,27 +925,26 @@ public class Unit_case_generator {
                                 }
                                 else
                                 {
-                                    for (b = 0; b < p.length1 - c2f1.start - c2f1.length - c; b++)
+                                    char[][] temp_information = new char[2][RNA.MAX_RNA_LENGTH];
+                                    for (int b = 0; b < p.length1 - c2f1.start - c2f1.length - c; b++)
                                     {
                                         temp_information[0][b] = p.information[0][b + c2f1.start + c2f1.length + c];
                                         temp_information[1][b] = p.information[1][b + c2f1.start + c2f1.length + c];
                                     }
-                                    for (b = p.length1 - 1; b >= 0; b--)
+                                    for (int b = p.length1 - 1; b >= 0; b--)
                                     {
                                         if (b >= p.length1 - c2f1.start - c2f1.length - c)
                                         {
                                             p.information[0][b] = p.information[0][b - p.length1 + c2f1.start + c2f1.length + c];
                                             p.information[1][b] = p.information[1][b - p.length1 + c2f1.start + c2f1.length + c];
-                                            if (p.information[0][b] == 0) { printf("unexpected error on add-nucleotide51"); exit(0); }
                                         }
                                         else
                                         {
                                             p.information[0][b] = temp_information[0][b];
                                             p.information[1][b] = temp_information[1][b];
-                                            if (p.information[0][b] == 0) { printf("unexpected error on add-nucleotide52"); exit(0); };
                                         }
                                     }
-                                    for (a = 0; a < p3.length1; a++) { p.information[1][a] = p3.information[0][p3.length1 - 1 - a]; }
+                                    for (int a = 0; a < p3.length1; a++) { p.information[1][a] = p3.information[0][p3.length1 - 1 - a]; }
 
                                     for (c2f2 = p.chain2.next; c2f2 != p.chain2; c2f2 = c2f2.next)
                                         c2f2.start = c2f2.start + p.length1 - c2f1.start - c2f1.length - c;
@@ -1043,18 +957,16 @@ public class Unit_case_generator {
                                 }
                                 p.length2 = p.length2 + p3.length1;
 
-                                (p3.prior).next = p3.next;
-                                if (p3.next != room_head[h][y][x])(p3.next).prior = p3.prior;
-                                free(p3.chain2);
-                                free(p3);
+                                p3.removeThis();
                                 break;
                             }
                         }
                     }
                 }
-                flag3 = 0;  //Ma2:  a flag labeling whether the attraction has happened
+                int flag3 = 0;  //Ma2:  a flag labeling whether the attraction has happened
                 for (c2f2 = p.chain2.next; c2f2 != p.chain2; c2f2 = c2f2.next)
                 {
+                    int length;
                     if (c2f2.next == p.chain2)
                     {
                         if (p.type1 == 1 && p.chain2.next.start != 0) break;  //Ma2:  "p.length2 == 0 ||" is deleted
@@ -1067,29 +979,30 @@ public class Unit_case_generator {
 
                     if (p3.length1 <= length)
                     {
+                        int flag = 1;
+                        int c;
                         for (c = 0; c <= length - p3.length1; c++)
                         {
+                            int b;
                             for (flag = 0, b = 0; b < p3.length1; b++)
                             {
-                                if ((p3.information[0][p3.length1 - 1 - b] + p.information[0][c2f2.start + c2f2.length + c + b]) == 5)continue;
-                                else if (randd() < PFP)continue;
+                                if (((p3.information[0][p3.length1 - 1 - b] + p.information[0][c2f2.start + c2f2.length + c + b]) == 'A'+'U')||((p3.information[0][p3.length1 - 1 - b] + p.information[0][c2f2.start + c2f2.length + c + b]) == 'G'+'C'))continue;
+                                else if (random.nextDouble() < PFP)continue;
                                 else { flag = 1; break; }
                             }
                             if (flag == 0)break;
                         }
                         if (flag == 0)
                         {
-                            rtdaddphili = randd();
+                            double rtdaddphili = random.nextDouble();
                             if (c != 0)rtdaddphili = rtdaddphili * FDA; //Ma2
                             if (rtdaddphili < f1)
                             {
-                                for (a = 0; a < p3.length1; a++) {
+                                for (int a = 0; a < p3.length1; a++) {
                                     p.information[1][c2f2.start + c2f2.length + c + a] = p3.information[0][p3.length1 - 1 - a];
-                                    if (p.information[1][c2f2.start + c2f2.length + c + a] == 0) { printf("unexpected error on add-nucleotide6"); exit(0); };
                                 }
 
-                                c2f3 = (struct c2_frag*)malloc(sizeof(struct c2_frag));
-                                if (!c2f3) { printf("\tinit1--memeout\n"); exit(0); }
+                                c2_frag c2f3 = new c2_frag();
                                 c2f3.prior = c2f2;
                                 c2f3.next = c2f2.next;
                                 c2f2.next.prior = c2f3;
@@ -1100,10 +1013,7 @@ public class Unit_case_generator {
 
                                 p.length2 = p.length2 + p3.length1;
 
-                                (p3.prior).next = p3.next;
-                                if (p3.next != room_head[h][y][x])(p3.next).prior = p3.prior;
-                                free(p3.chain2);
-                                free(p3);
+                                p3.removeThis();
                                 flag3 = 1;   //Ma2:  the attraction has happened.  -- "flag=2" is changed.
                                 break;
                             }
@@ -1111,13 +1021,9 @@ public class Unit_case_generator {
                     }
                 }
                 if (flag3 == 1) break;  //Ma2 "flag==2" is changed
-                //{
-                //	flag = 0;
-                //	break;
-                //}
             }
         }
-        fresh_unit();
+        return fresh_unit(p,y,x);
     }
 
     private RNA case3(RNA p, int y, int x) { // Separation
