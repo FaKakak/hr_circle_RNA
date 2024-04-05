@@ -28,10 +28,10 @@ public class RNA {
 
     public RNA() {
         information = new char[2][MAX_RNA_LENGTH];
-        int length1=0;
-        int length2=0;
-        int type1=0;
-        int type2=0;
+        length1=0;
+        length2=0;
+        type1=0;
+        type2=0;
         next = this;
         prior = null;
         chain2= new c2_frag();
@@ -43,45 +43,27 @@ public class RNA {
     }
     public RNA(char[] bond1,int type) {
         information = new char[2][MAX_RNA_LENGTH];
-        int length1= bond1.length;
-        int length2=0;
-        int type1=type;
-        int type2=0;
+        length1= bond1.length;
+        length2=0;
+        type1=type;
+        type2=0;
         next = this;
         prior = null;
         chain2= new c2_frag();
         for (int i = 0; i < MAX_RNA_LENGTH; i++) {
-            information[0][i] = bond1[i];
+            information[0][i] = '0';
             information[1][i]='0';
         }
+        System.arraycopy(bond1, 0, information[0], 0, bond1.length);
     }
 
-    // 把newRNA添加到该RNA后边
-    public void addAfter(RNA newRNA){
+    public void addAfter(RNA newRNA){// 把newRNA添加到该RNA后边
         RNA oldNext = next;
         next = newRNA;
         newRNA.prior = this;
         newRNA.next = oldNext;
         if(oldNext.prior!=null) oldNext.prior = newRNA;
     }
-
-    // 把newRNA添加到该RNA前边
-    public void addBefore(RNA newRNA){
-        if(prior==null){
-            next = newRNA;
-            newRNA.prior = this;
-            newRNA.next = this;
-        }
-        else{
-            RNA oldPrior = prior;
-            oldPrior.next = newRNA;
-            newRNA.prior = oldPrior;
-            newRNA.next = this;
-            this.prior = newRNA;
-        }
-    }
-
-    // 把当前RNA从链表中摘出来，变成自由的RNA
     public void removeThis(){
         // 游离的RNA不用动
         if(prior==null) {

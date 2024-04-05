@@ -65,6 +65,7 @@
 #include <math.h>
 #include <conio.h>
 #include <string.h>
+#include <ctime>
 
 /******* RANDOM NUMBER GENERATOR BY ZIFF **********/
 #define A1 471
@@ -83,13 +84,13 @@ static long ra[M + 1], nd;
 #define G 3
 #define A 1
 #define U 4
-#define STEPNUM 10000000     // Total time steps of Monte Carlo simulation
+#define STEPNUM 1500000     // Total time steps of Monte Carlo simulation
 #define STAREC 0          // The step to start record
 #define RECINT 10000       // The interval steps of recording
 #define MAX_RNA_LENGTH 100    // Defining maximum RNA length allowed in the simulation
 #define LONG_CHAIN_LEN 30     // Defining long chains for recording
 
-#define SD 11  //13   //5
+#define SD 453  //13   //5
 #define N 30  //20    //Ma2-1            // The side length of the two-dimensional grid
 #define TOTAL_MATERIAL 80000 //40000 // Total materials in the system
 #define HRSEQ A,G,U,C
@@ -226,6 +227,8 @@ float unit[(STEPNUM - STAREC) / RECINT + 1];  // Record number of units in steps
 float cir_unit[(STEPNUM - STAREC) / RECINT + 1];  // 
 
 float raw_num[(STEPNUM - STAREC) / RECINT + 1];  // Record number of raw in steps
+time_t time_start, time_end, time1, time2, test;
+time_t* ptimer = &test;
 // Number of replicases and polynucleotides including the complementary sequence of presumed replicase sequence 
 
 
@@ -1739,7 +1742,6 @@ void unit_case(void)      // Action of units (molecules) in the system
 				}
 				else fresh_unit();
 				break;
-
 			default: printf("rna case error");
 			}
 		}
@@ -1946,6 +1948,8 @@ int main()
 {
 	inits();        // initialization of the system
 
+	time1 = time(ptimer);
+
 	for (i = 0; i <= STEPNUM; i++)      // Monte-Carlo cycle
 	{
 		if (i == INOCUSTEP)inoculate(0);  // Ma2-1
@@ -1957,7 +1961,14 @@ int main()
 		h = !h;
 	}
 
+	time2 = time(ptimer);
+
 	freepool();
+
+	FILE* fptxt;  //Ma-start
+	errno_t err;
+	err = fopen_s(&fptxt, "picture.txt", "at");
+	fprintf(fptxt, "execution time:%i, seed:%i\n\n", time2 - time1, SD);
 
 	return (0);
 }

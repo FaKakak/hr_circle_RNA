@@ -33,14 +33,15 @@ public class Unit_case_generator {
     int N;
     int[][] raw_arr;
     RNA[][][] cell_head;
-    Random random = new Random(Main.SEED);
+    Random random;
     int h;
 
-    public Unit_case_generator(Environment environment) {
+    public Unit_case_generator(Environment environment,Random random) {
         this.environment = environment;
         N = Environment.SIDE;
         raw_arr = environment.raw_arr;
         cell_head = environment.room_head;
+        this.random = random;
     }
 
     public void unit_case(int h) {
@@ -53,7 +54,6 @@ public class Unit_case_generator {
         int xyIndex, xy, x, y;
 
         for (int i = 0; i < Environment.CELLNUM; i++) {
-            // 随机选x,y，相当于xy_choose(void)
             xyIndex = random.nextInt(xy_init.size());
             xy = xy_init.get(xyIndex);
             xy_init.remove(xyIndex);
@@ -244,7 +244,6 @@ public class Unit_case_generator {
     private RNA case1(RNA p, int y, int x) {
         if (p.length1 == 1)  // Decay of mononucleotide
         {
-            //if (p.information[0][0] == 0) { printf("unexpected error on p-nucleotide"); exit(0); }
             if (p.length2 == 0)
             {
                 if (random.nextDouble() < PMD)
@@ -271,7 +270,6 @@ public class Unit_case_generator {
             if (p.type1 == 0)
             {
                 c2_frag c2f1 = p.chain2.prior;
-
                 // Nucleotide residue decaying at the end of RNA
                 if (p.information[1][p.length1 - 1] == '0')         // Single chain at the end
                 {

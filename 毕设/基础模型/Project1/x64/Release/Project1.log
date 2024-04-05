@@ -1,0 +1,11 @@
+﻿  nt-syn-fig2-pyd-2.cpp
+D:\WHU\hr_cicrle_RNA\毕设\基础模型\nt-syn-fig2-pyd-2.cpp(865,40): warning C4552: ”-“: 未使用表达式结果
+D:\WHU\hr_cicrle_RNA\毕设\基础模型\nt-syn-fig2-pyd-2.cpp(947,16): warning C4477: “fprintf”: 格式字符串“%i”需要类型“int”的参数，但可变参数 1 拥有了类型“time_t”
+D:\WHU\hr_cicrle_RNA\毕设\基础模型\nt-syn-fig2-pyd-2.cpp(947,16): message : 请考虑在格式字符串中使用“%lli”
+D:\WHU\hr_cicrle_RNA\毕设\基础模型\nt-syn-fig2-pyd-2.cpp(947,16): message : 请考虑在格式字符串中使用“%Ii”
+D:\WHU\hr_cicrle_RNA\毕设\基础模型\nt-syn-fig2-pyd-2.cpp(947,16): message : 请考虑在格式字符串中使用“%I64i”
+  正在生成代码
+  Previous IPDB not found, fall back to full compilation.
+  All 18 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  已完成代码的生成
+  Project1.vcxproj -> D:\WHU\hr_cicrle_RNA\毕设\基础模型\Project1\x64\Release\Project1.exe

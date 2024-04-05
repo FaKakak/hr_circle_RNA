@@ -1,0 +1,164 @@
+c程序：
+execution time: 1413s,SD:555,nr=1873
+
+execution time: 1373s,SD:233,nr=1774
+
+execution time: 1566s,SD:121,nr=1791
+
+execution time: 1258s,SD:926,nr=1748
+
+execution time: 1525s,SD:318,nr=1689
+
+execution time: 1553s,SD:618,nr=1781
+
+execution time: 1716s,SD:88,nr=1800
+
+execution time: 1435s,SD:24,nr=1867
+
+execution time: 1505s,SD:99,nr=1803
+
+execution time: 1524s,SD:48,nr=1695
+
+平均运行时间：1487s
+
+
+java程序：
+
+程序运行时间：4459 s,nr=1832
+
+程序运行时间：4616 s,nr=1606
+
+程序运行时间：4793 s,nr=1699
+
+程序运行时间：4579 s,nr=1930
+
+程序运行时间：4754 s,nr=1884
+
+程序运行时间：4996 s,nr=1861
+
+程序运行时间：5050 s,nr=1784
+
+程序运行时间：4878 s,nr=1894
+
+程序运行时间：4823 s,nr=1774
+
+程序运行时间：4634 s,nr=1893
+
+平均运行时间：4758 s
+
+效率比：4758s / 1487s = 3.20
+
+
+各项参数：
+#define A1 471
+#define B1 1586
+#define C1 6988
+#define D1 9689
+#define M 16383
+#define RIMAX 2147483648.0        // = 2^31 
+#define RandomInteger (++nd, ra[nd & M] = ra[(nd-A1) & M] ^ ra[(nd-B1) & M] ^ ra[(nd-C1) & M] ^ ra[(nd-D1) & M])
+void seed(long seed);  // random number initialization 
+static long ra[M + 1], nd;
+/**************************************************/
+
+#define LEN sizeof(struct rna)
+#define C 2
+#define G 3
+#define A 1
+#define U 4
+#define STEPNUM 6000000    // Total time steps of Monte Carlo simulation
+#define STAREC 0          // The step to start record
+#define RECINT 10000       // The interval steps of recording
+#define MAX_RNA_LENGTH 100    // Defining maximum RNA length allowed in the simulation
+#define LONG_CHAIN_LEN 30     // Defining long chains for recording
+
+#define SD 48   //555
+#define N 30                // The N length of the two-dimensional grid
+#define TOTAL_MATERIAL 40000  // Total materials in the system
+#define NRSEQ A,G,C,A,U,G,C,U   // The presumed specific sequence with which a polynucleotide could act as a nt-synthetase
+#define CTR1SEQ C,U,C,U,A,G,A,G  // 
+#define CTR2SEQ C,G,U,U,A,A,C,G  // 
+#define CTR3SEQ A,U,C,G,C,G,A,U  // 
+
+#define INOCUSEQ NRSEQ
+#define INOCUNUM 10
+#define INOCUSEQ1 CTR1SEQ
+#define INOCUSEQ2 CTR2SEQ   
+#define INOCUSEQ3 CTR3SEQ   
+
+#define INOCUSTEP 10000
+#define PSBP 0.9             // Probability of separation of a base-pair
+#define PBB 0.000001  //0.000005         // Probability of breaking of a phosphodiester bond
+#define PLMC 0.000002        // Probability of ligation of two unit in a cell with mineral catalysis 
+#define PAT 0.1              // Probability of attracting a substrate by a template when the substrate could base-pair with the template
+#define PLT 0.9              // Probability of a template-directed ligation 
+#define PMOVR 0.01           // Probability of movement of raw
+#define PMOV (PMOVR/2)       // Probability of movement of a mononucleotide
+#define PMF 0.0002           // probability of mononucleotide formation from raw materials
+#define PMFS 0.9             // probability of mononucleotide formation from raw materials under the catalysis of nt-synthetase
+#define TNSS 1               // Turn of nt-synthesis by nt-synthetase each step
+#define PMD 0.01             // probability of mononucleotide decay to raw materials
+
+#define PNDE  0.00002  // Ma --- Probability of nucleotide decaying into its precursor at RNA's chain end
+
+
+#define PFP 0.001   //0.01             // probability of false base-pairing
+#define FDMOV (pow(p->length1+p->length2,1/3.0))  
+							 // The factor defining the relationship between probability of moving and molecular weight
+#define CELLNUM (N*N)  // Cell numbers in the grid
+
+long randl(long);         // random number between 0 and parameter 
+double randd(void);       // random double between 0 and 1         
+void avail_xy_init(void); // Initialization for xy_choose
+void xy_choose(void);     // Picks a cell at random 
+void fresh_unit(void);    // Updating a unit for the next time step
+int findseq(char seq[], int seqlength, struct rna* p); //find a specific subsequence in a sequence 
+void inits(void);         // initialization of the system
+void inoculate(void);
+void unit_case(void);     // Action of units (molecules) in the system
+int record(void);         // Data recording
+void freepool(void);      // Memory releasing
+
+struct rna                // A mononucleotide or polynucleotide
+{
+	char information[2][MAX_RNA_LENGTH];
+	int length1;
+	int length2;
+	int nick;
+	struct rna* next;
+	struct rna* prior;
+};
+struct rna* cell_head[2][N][N];
+struct rna* p, * p1, * p2, * p3;
+
+static char nrseq[50] = { NRSEQ };        // Presumed nt_synthetase sequence
+static char ctr1seq[50] = { CTR1SEQ };
+static char ctr2seq[50] = { CTR2SEQ };
+static char ctr3seq[50] = { CTR3SEQ };
+static char inocuseq[50] = { INOCUSEQ };
+static char inocuseq1[50] = { INOCUSEQ1 };
+static char inocuseq2[50] = { INOCUSEQ2 };
+static char inocuseq3[50] = { INOCUSEQ3 };
+static int raw_arr[N][N];
+
+int over_max_len = 0;
+int x, y;                 // The coordinate of cells in the grid 
+int nrlength, ctr1length, ctr2length, ctr3length;
+int inoculength, inoculength1, inoculength2, inoculength3;
+int randcase, randcase1, randcaser, randcaser1, g = 0, h = 0;
+int flag, flag1, flag2, flag3;
+long i;                  // Cycle variable for Monte Carlo steps
+long available;
+long availabl[CELLNUM];
+long recstep[(STEPNUM - STAREC) / RECINT + 1];    // Record steps
+float nr_num[(STEPNUM - STAREC) / RECINT + 1];   // Record number of nt-synthetases in steps
+float ctr1_num[(STEPNUM - STAREC) / RECINT + 1];  // 
+float ctr2_num[(STEPNUM - STAREC) / RECINT + 1];  // 
+float ctr3_num[(STEPNUM - STAREC) / RECINT + 1];  // 
+float total_mat_num[(STEPNUM - STAREC) / RECINT + 1];  // Record number of total materials in steps
+float RNA_num[(STEPNUM - STAREC) / RECINT + 1];  // Record number of units in steps
+float raw_num[(STEPNUM - STAREC) / RECINT + 1];  // Record number of raw in steps
+time_t time_start, time_end, time1, time2,test;
+time_t* ptimer = &test;
+
+
