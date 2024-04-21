@@ -141,20 +141,7 @@ public class Unit_case_generator {
             int randcaser = random.nextInt(2);
             switch (randcaser) {
                 case 0 -> {  //forming nt
-                    if (random.nextDouble() < PMF) {
-                        raw_arr[y][x]--;
-                        RNA p3 = new RNA();
-                        int randnt = random.nextInt(4) + 1;
-                        switch (randnt) {
-                            case 1 -> p3.information[0][0] = 'A';
-                            case 2 -> p3.information[0][0] = 'C';
-                            case 3 -> p3.information[0][0] = 'G';
-                            case 4 -> p3.information[0][0] = 'U';
-                        }
-
-                        p3.length1 = 1;
-                        fresh_unit(p3, y, x);
-                    }
+                    New_Nucleotide(y, x, PMF);
                 }
                 case 1 -> {   // raw moving
                     if (random.nextDouble() < PMR)   //Ma2: with toroidal topology to avoid edge effects
@@ -284,12 +271,7 @@ public class Unit_case_generator {
                 {
                     if (random.nextDouble() < PNDE * sqrt(PNDE))                 // The decay of the paired residues at the same time
                     {
-                        p.information[0][p.length1 - 1] = '0';
-                        p.information[1][p.length1 - 1] = '0';
-                        raw_arr[y][x]+=2;
-                        p.length1--;
-                        p.length2--;
-                        c2f1.length--;
+                        decay_of_the_paired_residues(p, y, x, c2f1);
 
                         if (c2f1.length == 0)
                         {
@@ -297,12 +279,10 @@ public class Unit_case_generator {
                         }
                     }
                 }
-
                 if (p.length1 == 1)
                 {
                     return fresh_unit(p,y,x);
                 }
-
                 // Nucleotide residue decaying at the start of RNA
                 c2_frag c2f2 = p.chain2.next;
                 if (p.information[1][0] == '0')      //Single chain at the start
@@ -334,13 +314,7 @@ public class Unit_case_generator {
                             p.information[0][b - 1] = p.information[0][b];
                             p.information[1][b - 1] = p.information[1][b];
                         }
-                        p.information[0][p.length1 - 1] = '0';
-                        p.information[1][p.length1 - 1] = '0';
-                        raw_arr[y][x]+=2;
-
-                        p.length1--;
-                        p.length2--;
-                        c2f2.length--;
+                        decay_of_the_paired_residues(p, y, x, c2f2);
 
                         for (c2_frag c2f3 = c2f2.next; c2f3 != p.chain2; c2f3 = c2f3.next)
                         {
@@ -378,77 +352,11 @@ public class Unit_case_generator {
                             }
                         }
 
-                        int flag = 1;
-                        if (j - 1 >= hrlength / 2 && p.length1 - j + 1 >= hrlength / 2)       //new
-                        {
-                            flag = 0;
-                            for (int a = 0; a < hrlength; a++)
-                            {
-                                if (p.information[0][j - 1 - hrlength / 2 + a] == RNA.HRSEQ[a] && p.information[1][j - 1 - hrlength / 2 + a] == '0')continue;
-                                else { flag = 1; break; }
-                            }
-                        }
-                        if (flag == 0)f = f * FHR;   //Ma2
+                        f = change_concerns_HR(p, j, hrlength, f);
 
                         c2f1 = p.chain2.prior;
                         c2f2 = p.chain2.next;
-                        if (random.nextDouble() < f)
-                        {
-                            RNA p3 = new RNA();
-                            for (int b = 0; b < p.length1 - j + 1; b++)
-                            {
-                                p3.information[0][b] = p.information[0][b + j - 1];
-                                p.information[0][b + j - 1] = '0';
-                            }
-                            p3.length1 = p.length1 - j + 1;
-                            p.length1 = j - 1;
-                            if (c2f1 != p.chain2 && c2f1.start + c2f1.length > j - 1)   //Ma2
-                            {
-                                for (int b = 0; b < c2f1.start + c2f1.length - j + 1; b++)
-                                {
-                                    p3.information[1][b] = p.information[1][b + j - 1];
-                                    p.information[1][b + j - 1] = '0';
-                                }
-
-                                while (c2f1 != p.chain2)
-                                {
-                                    c2_frag c2f3 = new c2_frag();
-                                    c2f3.prior = p3.chain2;
-                                    c2f3.next = p3.chain2.next;
-                                    p3.chain2.next.prior = c2f3;
-                                    p3.chain2.next = c2f3;
-
-                                    if (j <= c2f1.start + 1)
-                                    {
-                                        c2f3.length = c2f1.length;
-                                        c2f3.start = c2f1.start - j + 1;
-                                        p3.length2 = p3.length2 + c2f3.length;
-                                        p.length2 = p.length2 - c2f3.length;
-
-                                        (c2f1.prior).next = c2f1.next;
-                                        (c2f1.next).prior = c2f1.prior;
-                                        c2f1 = c2f1.prior;
-
-                                        if (j >= c2f1.start + c2f1.length + 1)
-                                        {
-                                            break;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        c2f3.length = c2f1.start + c2f1.length - j + 1;
-                                        c2f3.start = 0;
-                                        c2f1.length = c2f1.length - c2f3.length;
-
-                                        p3.length2 = p3.length2 + c2f3.length;
-                                        p.length2 = p.length2 - c2f3.length;
-                                        break;
-                                    }
-                                }
-                            }
-                            fresh_unit(p3,y,x);
-                            break;     //Bond break occurs
-                        }
+                        if (change_frag(p, y, x, c2f1, j, f)) break;     //Bond break occurs
                     }
                     if (j == 1) break;
                 }
@@ -541,14 +449,8 @@ public class Unit_case_generator {
                         {
                             c2f3 = c2f1.next;   //Ma2
                         }
-
-                        //Ma2: two "if" sentences were deleted
-
                         for (c2_frag c2f2 = c2f3; c2f2 != p.chain2; c2f2 = c2f2.next) c2f2.start = c2f2.start - j + 1;
                         for (c2_frag c2f2 = p.chain2.next; c2f2 != c2f1.next; c2f2 = c2f2.next) c2f2.start = c2f2.start + p.length1 - j + 1;
-
-                        //if (p.chain2.next.next == p.chain2)break;  //Ma2
-
                         if (c2f3 != p.chain2 && c2f1 != p.chain2)   //Ma2
                         {
                             p.chain2.prior.next = p.chain2.next;
@@ -558,7 +460,6 @@ public class Unit_case_generator {
                             c2f1.next = p.chain2;
                             c2f3.prior = p.chain2;
                         }
-
                         break;
                     }
                 }
@@ -584,76 +485,11 @@ public class Unit_case_generator {
                                 }
                             }
 
-                            int flag = 1;
-                            if (j - 1 >= hrlength / 2 && p.length1 - j + 1 >= hrlength / 2)       //new
-                            {
-                                flag = 0;
-                                for (int a = 0; a < hrlength; a++)
-                                {
-                                    if (p.information[0][j - 1 - hrlength / 2 + a] == RNA.HRSEQ[a] && p.information[1][j - 1 - hrlength / 2 + a] == '0')continue;
-                                    else { flag = 1; break; }
-                                }
-                            }
-                            if (flag == 0)f = f * FHR;   //Ma2
+                            f = change_concerns_HR(p, j, hrlength, f);
 
                             c2_frag c2f1 = p.chain2.prior;
                             c2_frag c2f2 = p.chain2.next;
-                            if (random.nextDouble() < f)
-                            {
-                                RNA p3 = new RNA();
-
-                                for (int b = 0; b < p.length1 - j + 1; b++)
-                                {
-                                    p3.information[0][b] = p.information[0][b + j - 1];
-                                    p.information[0][b + j - 1] = '0';
-                                }
-                                p3.length1 = p.length1 - j + 1;
-                                p.length1 = j - 1;
-                                if (c2f1 != p.chain2 && c2f1.start + c2f1.length > j - 1)   //Ma2
-                                {
-                                    for (int b = 0; b < c2f1.start + c2f1.length - j + 1; b++)
-                                    {
-                                        p3.information[1][b] = p.information[1][b + j - 1];
-                                        p.information[1][b + j - 1] = '0';
-                                    }
-
-                                    while (c2f1 != p.chain2)
-                                    {
-                                        c2_frag c2f3 = new c2_frag();
-                                        c2f3.prior = p3.chain2;
-                                        c2f3.next = p3.chain2.next;
-                                        p3.chain2.next.prior = c2f3;
-                                        p3.chain2.next = c2f3;
-
-                                        if (j <= c2f1.start + 1)
-                                        {
-                                            c2f3.length = c2f1.length;
-                                            c2f3.start = c2f1.start - j + 1;
-                                            p3.length2 = p3.length2 + c2f3.length;
-                                            p.length2 = p.length2 - c2f3.length;
-
-                                            (c2f1.prior).next = c2f1.next;
-                                            (c2f1.next).prior = c2f1.prior;
-                                            c2f1 = c2f1.prior;
-                                            if (j >= c2f1.start + c2f1.length + 1)
-                                            {
-                                                break;
-                                            }
-                                        }
-                                        else
-                                        {
-                                            c2f3.length = c2f1.start + c2f1.length - j + 1;
-                                            c2f3.start = 0;
-                                            c2f1.length = c2f1.length - c2f3.length;
-                                            p3.length2 = p3.length2 + c2f3.length;
-                                            p.length2 = p.length2 - c2f3.length;
-                                            break;
-                                        }
-                                    }
-                                }
-                                fresh_unit(p3,y,x);
-                                break;    //Bond break occurs
-                            }
+                            if (change_frag(p, y, x, c2f1, j, f)) break;
                         }
                         if (j == flag4) break;
                     }
@@ -661,6 +497,91 @@ public class Unit_case_generator {
             }
         }
         return fresh_unit(p,y,x);
+    }
+
+    private boolean change_frag(RNA p, int y, int x, c2_frag c2f1, int j, double f) {
+        if (random.nextDouble() < f)
+        {
+            RNA p3 = new RNA();
+            for (int b = 0; b < p.length1 - j + 1; b++)
+            {
+                p3.information[0][b] = p.information[0][b + j - 1];
+                p.information[0][b + j - 1] = '0';
+            }
+            p3.length1 = p.length1 - j + 1;
+            p.length1 = j - 1;
+            if (c2f1 != p.chain2 && c2f1.start + c2f1.length > j - 1)   //Ma2
+            {
+                for (int b = 0; b < c2f1.start + c2f1.length - j + 1; b++)
+                {
+                    p3.information[1][b] = p.information[1][b + j - 1];
+                    p.information[1][b + j - 1] = '0';
+                }
+
+                while (c2f1 != p.chain2)
+                {
+                    c2_frag c2f3 = new c2_frag();
+                    c2f3.prior = p3.chain2;
+                    c2f3.next = p3.chain2.next;
+                    p3.chain2.next.prior = c2f3;
+                    p3.chain2.next = c2f3;
+
+                    if (j <= c2f1.start + 1)
+                    {
+                        c2f3.length = c2f1.length;
+                        c2f3.start = c2f1.start - j + 1;
+                        p3.length2 = p3.length2 + c2f3.length;
+                        p.length2 = p.length2 - c2f3.length;
+
+                        (c2f1.prior).next = c2f1.next;
+                        (c2f1.next).prior = c2f1.prior;
+                        c2f1 = c2f1.prior;
+
+                        if (j >= c2f1.start + c2f1.length + 1)
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        c2f3.length = c2f1.start + c2f1.length - j + 1;
+                        c2f3.start = 0;
+                        c2f1.length = c2f1.length - c2f3.length;
+
+                        p3.length2 = p3.length2 + c2f3.length;
+                        p.length2 = p.length2 - c2f3.length;
+                        break;
+                    }
+                }
+            }
+            fresh_unit(p3,y,x);
+            return true;
+        }
+        return false;
+    }
+
+    private double change_concerns_HR(RNA p, int j, int hrlength, double f) {
+        int flag = 1;
+        if (j - 1 >= hrlength / 2 && p.length1 - j + 1 >= hrlength / 2)       //new
+        {
+            flag = 0;
+            for (int a = 0; a < hrlength; a++)
+            {
+                if (p.information[0][j - 1 - hrlength / 2 + a] == RNA.HRSEQ[a] && p.information[1][j - 1 - hrlength / 2 + a] == '0')continue;
+                else { flag = 1; break; }
+            }
+        }
+        if (flag == 0)f = f * FHR;   //Ma2
+        return f;
+    }
+
+    private void decay_of_the_paired_residues(RNA p, int y, int x, c2_frag c2f1) {
+        p.information[0][p.length1 - 1] = '0';
+        p.information[1][p.length1 - 1] = '0';
+        raw_arr[y][x]+=2;
+        p.length1--;
+        p.length2--;
+        c2f1.length--;
     }
 
     private RNA case2(RNA p, int y, int x) {
@@ -722,8 +643,6 @@ public class Unit_case_generator {
             }
         }
 
-//if (p.type1 == 0) { fresh_unit(); break; }  //Ma2-1  Linear RNA cannot attract substrates
-//Template-directed attraction of substrates
         double f1;
         if (p.type1 == 1) f1=PAT;  //Ma2-1
         else f1 = PAT * FLT;   //Ma2-1
@@ -1074,25 +993,28 @@ public class Unit_case_generator {
                 {
                     if (nt_turn <= 0)break;
                     nt_turn--;
-                    if (random.nextDouble() < PMFS)
-                    {
-                        raw_arr[y][x]--;
-                        RNA p3 = new RNA();
-                        int randnt = random.nextInt(4) + 1;
-                        switch (randnt) {
-                            case 1 -> p3.information[0][0] = 'A';
-                            case 2 -> p3.information[0][0] = 'C';
-                            case 3 -> p3.information[0][0] = 'G';
-                            case 4 -> p3.information[0][0] = 'U';
-                        }
-
-                        p3.length1 = 1;
-                        fresh_unit(p3,y,x);
-                    }
+                    New_Nucleotide(y, x, PMFS);
                 }
             }
         }
         return fresh_unit(p,y,x);
+    }
+
+    private void New_Nucleotide(int y, int x, double pmfs) {
+        if (random.nextDouble() < pmfs)
+        {
+            raw_arr[y][x]--;
+            RNA p3 = new RNA();
+            int randnt = random.nextInt(4) + 1;
+            switch (randnt) {
+                case 1 -> p3.information[0][0] = 'A';
+                case 2 -> p3.information[0][0] = 'C';
+                case 3 -> p3.information[0][0] = 'G';
+                case 4 -> p3.information[0][0] = 'U';
+            }
+            p3.length1 = 1;
+            fresh_unit(p3,y,x);
+        }
     }
 
     private int[] case5(RNA p, int y, int x) {
